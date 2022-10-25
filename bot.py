@@ -28,34 +28,31 @@ class DB_Connection:
 		self.connection_text = connection_text
 
 	@property
-	def database_search(self) ->  dict:
+	def database_search(self) -> dict:
 
 		try:
 			searchbynum = bool(re.findall(r'[0-9]', self.connection_text))
 
-			if searchbynum:
-				query_db = requests.post(
-					'https://plumpdisloyalwatch.jackson0575.repl.co/AntiRecheckAPI/',
-					data={
-						'text_card_query': self.connection_text
-					}
-				).json()
-
-				
-
-				if query_db['Input_CC'] != "NO CC!":
-					if query_db['Result'] == False:
-
-						return {'cc': query_db['Input_CC'], 'post': True}
-					else:
-						return {'cc': query_db['Input_CC'], 'post': False}
-				else:
-					return {'cc': query_db['Input_CC'], 'post': False}
-			else:
+			if not searchbynum:
 				return {'cc': 'no data logs', 'post': False}
+			query_db = requests.post(
+				'https://plumpdisloyalwatch.jackson0575.repl.co/AntiRecheckAPI/',
+				data={
+					'text_card_query': self.connection_text
+				}
+			).json()
+
+
+
+			return (
+				{'cc': query_db['Input_CC'], 'post': True}
+				if query_db['Input_CC'] != "NO CC!" and query_db['Result'] == False
+				else {'cc': query_db['Input_CC'], 'post': False}
+			)
+
 		except Exception as e:
 
-			print(str(e))
+			print(e)
 			return False
 
 developers = ['878216403']
@@ -66,7 +63,7 @@ def extrct(update, context):
 	obo = update.message.text
 
 	print(obo)
-	
+
 
 	try:
 		check_card_bog_network = DB_Connection(str(obo)).database_search
@@ -74,7 +71,7 @@ def extrct(update, context):
 
 
 
-	
+
 
 			card_beautiful_send = f'''
 CC: {check_card_bog_network["cc"]}
@@ -86,13 +83,13 @@ CC: {check_card_bog_network["cc"]}
 				text=card_beautiful_send,
 				parse_mode='HTML'
 			)
-	except Exception as e:	
-		print(str(e))
+	except Exception as e:
+		print(e)
 
 def main():
 
 	tk = '' #Put here ur bot token 
-	
+
 	updater = Updater(tk, use_context=True)
 	dp = updater.dispatcher
 
